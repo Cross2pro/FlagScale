@@ -208,11 +208,15 @@ class GPT2Tokenizer(object):
                 special_tokens_file = None
             else:
                 logger.info("loading special tokens file {}".format(special_tokens_file))
-        # redirect to the cache, if necessary
+        # Resolve vocab/merges as local files (in-tree cache helper was removed).
+        # Keep URL/path error messaging for callers that still pass remote names.
         try:
-            from .file_utils import cached_path
-            resolved_vocab_file = cached_path(vocab_file, cache_dir=cache_dir)
-            resolved_merges_file = cached_path(merges_file, cache_dir=cache_dir)
+            if not (os.path.isfile(vocab_file) and os.path.isfile(merges_file)):
+                raise EnvironmentError(
+                    "vocab/merges not found at {} / {}".format(vocab_file, merges_file)
+                )
+            resolved_vocab_file = vocab_file
+            resolved_merges_file = merges_file
         except EnvironmentError:
             logger.error(
                 "Model name '{}' was not found in model name list ({}). "
